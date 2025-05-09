@@ -48,5 +48,5 @@ jobs:
 
       - name: Ejecutando tests
         run: |
-          chmod +x gradlew
-          ./gradlew test
+          chmod +x gradlew
+          ./gradlew test
