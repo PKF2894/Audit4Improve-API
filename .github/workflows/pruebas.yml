@@ -29,8 +29,8 @@ jobs:
 
       - name: Construyendo el artefacto (.jar)
         run: |
-          chmod +x gradlew
-          ./gradlew assemble
+          chmod +x gradlew
+          ./gradlew assemble
 
   test:
     name: Ejecución de tests
