@@ -1,0 +1,54 @@
+name: Flujo de trabajo para ejecutar los test
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [ V.0.2 ]
+  pull_request:
+    branches: [ V.0.2 ]
+  schedule:
+    - cron: '1 23 * * 0-4'
+
+jobs:
+  construccion:
+    runs-on: ubuntu-latest
+    outputs:
+      estado: ${{ steps.build_step.outcome }}
+    env:
+      GITHUB_LOGIN: ${{ github.actor }}
+      GITHUB_PACKAGES: ${{ secrets.GHTOKEN }}
+      GITHUB_OAUTH: ${{ secrets.GHTOKEN }}
+    steps:
+      - name: Checkout del código
+        uses: actions/checkout@v3
+
+      - name: Configurar Java
+        uses: actions/setup-java@v3
+        with:
+          distribution: 'temurin'
+          java-version: '16'
+
+      - name: Construcción del artefacto
+        id: build_step
+        run: |
+          chmod +x gradlew
+          ./gradlew assemble
+
+  pruebas:
+    runs-on: ubuntu-latest
+    needs: construccion
+    if: ${{ needs.construccion.result == 'success' }}
+    steps:
+      - name: Checkout del código
+        uses: actions/checkout@v3
+
+      - name: Configurar Java
+        uses: actions/setup-java@v3
+        with:
+          distribution: 'temurin'
+          java-version: '16'
+
+      - name: Ejecutar tests
+        run: |
+          chmod +x gradlew
+          ./gradlew test
