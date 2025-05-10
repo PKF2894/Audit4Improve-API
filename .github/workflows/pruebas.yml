@@ -2,51 +2,53 @@ name: Flujo de trabajo para ejecutar los test
 
 on:
   workflow_dispatch:
-  push:
+  push:
     branches: [ V.0.2 ]
-  pull_request:
+  pull_request:
     branches: [ V.0.2 ]
-  schedule:
-    - cron: '1 23 * * 0-4'
+  schedule:
+    - cron: '1 23 * * 0-4'
 
 jobs:
-  build:
-    name: Construcción del artefacto
-    runs-on: ubuntu-latest
-    env:
-      GITHUB_LOGIN: ${{ github.actor }}
-      GITHUB_PACKAGES: ${{ secrets.GHTOKEN }}
-      GITHUB_OAUTH: ${{ secrets.GHTOKEN }}
-    steps:
-      - name: Clonando el repositorio y estableciendo el espacio de trabajo
+  construccion:
+    runs-on: ubuntu-latest
+    outputs:
+      estado: ${{ steps.build_step.outcome }}
+    env:
+      GITHUB_LOGIN: ${{ github.actor }}
+      GITHUB_PACKAGES: ${{ secrets.GHTOKEN }}
+      GITHUB_OAUTH: ${{ secrets.GHTOKEN }}
+    steps:
+      - name: Checkout del código
         uses: actions/checkout@v3
 
-      - name: Configurando Java
+      - name: Configurar Java
         uses: actions/setup-java@v3
         with:
           distribution: 'temurin'
           java-version: '16'
 
-      - name: Construyendo el artefacto (.jar)
+      - name: Construcción del artefacto
+        id: build_step
         run: |
           chmod +x gradlew
           ./gradlew assemble
 
-  test:
-    name: Ejecución de tests
+  pruebas:
     runs-on: ubuntu-latest
-    needs: build
+    needs: construccion
+    if: ${{ needs.construccion.result == 'success' }}
     steps:
-      - name: Clonando el repositorio y estableciendo el espacio de trabajo
+      - name: Checkout del código
         uses: actions/checkout@v3
 
-      - name: Configurando Java
+      - name: Configurar Java
         uses: actions/setup-java@v3
         with:
           distribution: 'temurin'
           java-version: '16'
 
-      - name: Ejecutando tests
-        run: |
+      - name: Ejecutar tests
+        run: |
           chmod +x gradlew
           ./gradlew test
